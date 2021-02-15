@@ -5,6 +5,8 @@
 
 #include "bulletmlcommon.h"
 
+#define DECLSPEC
+
 template <typename Val_>
 class AbstractNumber {
 public:

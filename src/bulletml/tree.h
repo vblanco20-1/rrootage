@@ -6,7 +6,7 @@
 #include "bulletmlcommon.h"
 
 #include <list>
-
+#define DECLSPEC
 /// ツリーのクラス
 /**
  * ツリーってのはコンテナが存在しない集合体であると思う。

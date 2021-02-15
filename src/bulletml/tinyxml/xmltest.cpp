@@ -7,7 +7,7 @@
 // and show how to add and remove nodes.
 //
 
-int main()
+int main1()
 {
 	//
 	// We start with the 'demoStart' todo list. Process it. And

@@ -5,13 +5,14 @@
 #include "bulletmlrunnerimpl.h"
 
 BulletMLRunner::BulletMLRunner(BulletMLParser* bulletml) {
+	if (bulletml == NULL) return;
 	const std::vector<BulletMLNode*>& acts = bulletml->getTopActions();
 	for (size_t i = 0; i < acts.size(); i++) {
 		std::vector<BulletMLNode*> act;
 		act.push_back(acts[i]);
 		BulletMLState* state =
 			new BulletMLState(bulletml, act,
-							  boost::shared_ptr<BulletMLParameter>());
+							  std::shared_ptr<BulletMLParameter>());
 		impl_.push_back(makeImpl(state));
 	}
 }
