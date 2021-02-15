@@ -13,6 +13,9 @@
 #include <stdlib.h>
 
 #include "SDL.h"
+#include "SDL_opengl.h"
+#include "SDL_keyboard.h"
+#include "SDL_keycode.h"
 
 #include <math.h>
 #include <string.h>
@@ -119,7 +122,7 @@ int windowMode = 0;
 int brightness = DEFAULT_BRIGHTNESS;
 Uint8 *keys;
 SDL_Joystick *stick = NULL;
-
+SDL_Window* Window = NULL;
 void initSDL() {
   Uint32 videoFlags;
 
@@ -139,29 +142,32 @@ void initSDL() {
 
   /* Create an OpenGL screen */
   if ( windowMode ) {
-    videoFlags = SDL_OPENGL | SDL_RESIZABLE;
+      videoFlags = SDL_WINDOW_OPENGL;
   } else {
     if ( !lowres ) {
       // Use native desktop resolution if -lowres is not specified.
       screenWidth = 0;
       screenHeight = 0;
     }
-    videoFlags = SDL_OPENGL | SDL_FULLSCREEN;
+    videoFlags = SDL_WINDOW_OPENGL; 
   } 
-  if ( SDL_SetVideoMode(screenWidth, screenHeight, 0, videoFlags) == NULL ) {
-    fprintf(stderr, "Unable to create OpenGL screen: %s\n", SDL_GetError());
-    SDL_Quit();
-    exit(2);
-  }
 
-  SDL_Surface* videoSurface = SDL_GetVideoSurface();
-  screenWidth = videoSurface->w;
-  screenHeight = videoSurface->h;
+  Window = SDL_CreateWindow("OpenGL Test", 0, 0, screenWidth, screenHeight, videoFlags);
+
+  if (Window == NULL) {
+	  fprintf(stderr, "Unable to create OpenGL screen: %s\n", SDL_GetError());
+	  SDL_Quit();
+	  exit(2);
+  }
+  SDL_GLContext Context = SDL_GL_CreateContext(Window);
+  //SDL_Surface* videoSurface = SDL_GetVideoSurface();
+  screenWidth = SCREEN_WIDTH;//videoSurface->w;
+  screenHeight = SCREEN_HEIGHT;//videoSurface->h;
 
   stick = SDL_JoystickOpen(0);
 
   /* Set the title bar in environments that support it */
-  SDL_WM_SetCaption(CAPTION, NULL);
+//  SDL_WM_SetCaption(CAPTION, NULL);
 
   initGL();
   loadGLTexture(STAR_BMP, &starTexture);
@@ -219,7 +225,10 @@ void drawGLSceneEnd() {
 }
 
 void swapGLScene() {
-  SDL_GL_SwapBuffers();
+	//glClearColor(1.f, 0.f, 1.f, 0.f);
+	//glClear(GL_COLOR_BUFFER_BIT);
+    SDL_GL_SwapWindow(Window);
+  //SDL_GL_SwapBuffers();
 }
 
 void drawBox(GLfloat x, GLfloat y, GLfloat width, GLfloat height, 
@@ -947,16 +956,16 @@ int getPadState() {
       hat = SDL_JoystickGetHat(stick, 0);
     }
   }
-  if ( keys[SDLK_RIGHT] == SDL_PRESSED || keys[SDLK_KP6] == SDL_PRESSED || x > JOYSTICK_AXIS || (hat & SDL_HAT_RIGHT)) {
+  if ( keys[SDL_GetScancodeFromKey(SDLK_RIGHT)] == SDL_PRESSED  || x > JOYSTICK_AXIS || (hat & SDL_HAT_RIGHT)) {
     pad |= PAD_RIGHT;
   }
-  if ( keys[SDLK_LEFT] == SDL_PRESSED || keys[SDLK_KP4] == SDL_PRESSED || x < -JOYSTICK_AXIS || (hat & SDL_HAT_LEFT)) {
+  if ( keys[SDL_GetScancodeFromKey(SDLK_LEFT)] == SDL_PRESSED || x < -JOYSTICK_AXIS || (hat & SDL_HAT_LEFT)) {
     pad |= PAD_LEFT;
   }
-  if ( keys[SDLK_DOWN] == SDL_PRESSED || keys[SDLK_KP2] == SDL_PRESSED || y > JOYSTICK_AXIS || (hat & SDL_HAT_DOWN)) {
+  if ( keys[SDL_GetScancodeFromKey(SDLK_DOWN)] == SDL_PRESSED || y > JOYSTICK_AXIS || (hat & SDL_HAT_DOWN)) {
     pad |= PAD_DOWN;
   }
-  if ( keys[SDLK_UP] == SDL_PRESSED ||  keys[SDLK_KP8] == SDL_PRESSED || y < -JOYSTICK_AXIS || (hat & SDL_HAT_UP)) {
+  if ( keys[SDL_GetScancodeFromKey(SDLK_UP)] == SDL_PRESSED  || y < -JOYSTICK_AXIS || (hat & SDL_HAT_UP)) {
     pad |= PAD_UP;
   }
   return pad;
@@ -979,21 +988,21 @@ int getButtonState() {
     btn8 = SDL_JoystickGetButton(stick, 7);
     btn9 = SDL_JoystickGetButton(stick, 9);
   }
-  if ( keys[SDLK_z] == SDL_PRESSED || btn1 || btn4 ) {
+  if (keys[SDL_GetScancodeFromKey(SDLK_z)] == SDL_PRESSED || btn1 || btn4) {
     if ( !buttonReversed ) {
       btn |= PAD_BUTTON1;
     } else {
       btn |= PAD_BUTTON2;
     }
   }
-  if ( keys[SDLK_x] == SDL_PRESSED || btn2 || btn3 ) {
+  if ( keys[SDL_GetScancodeFromKey(SDLK_x)] == SDL_PRESSED || btn2 || btn3 ) {
     if ( !buttonReversed ) {
       btn |= PAD_BUTTON2;
     } else {
       btn |= PAD_BUTTON1;
     }
   }
-  if (keys [SDLK_p] == SDL_PRESSED || btn5 || btn6 || btn7 || btn8 || btn9) {
+  if (keys [SDL_GetScancodeFromKey(SDLK_p)] == SDL_PRESSED || btn5 || btn6 || btn7 || btn8 || btn9) {
     btn |= PAD_BUTTONP;
   }
   return btn;

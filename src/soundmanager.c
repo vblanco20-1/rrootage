@@ -46,22 +46,22 @@ static int chunkChannel[CHUNK_NUM] = {
 };
 
 void closeSound() {
-  int i;
-  if ( !useAudio ) return;
-  if ( Mix_PlayingMusic() ) {
-    Mix_HaltMusic();
-  }
-  for ( i=0 ; i<MUSIC_NUM ; i++ ) {
-    if ( music[i] ) {
-      Mix_FreeMusic(music[i]);
-    }
-  }
-  for ( i=0 ; i<CHUNK_NUM ; i++ ) {
-    if ( chunk[i] ) {
-      Mix_FreeChunk(chunk[i]);
-    }
-  }
-  Mix_CloseAudio();
+  //int i;
+  //if ( !useAudio ) return;
+  //if ( Mix_PlayingMusic() ) {
+  //  Mix_HaltMusic();
+  //}
+  //for ( i=0 ; i<MUSIC_NUM ; i++ ) {
+  //  if ( music[i] ) {
+  //    Mix_FreeMusic(music[i]);
+  //  }
+  //}
+  //for ( i=0 ; i<CHUNK_NUM ; i++ ) {
+  //  if ( chunk[i] ) {
+  //    Mix_FreeChunk(chunk[i]);
+  //  }
+  //}
+  //Mix_CloseAudio();
 }
 
 
@@ -71,24 +71,24 @@ static void loadSounds() {
   int i;
   char name[32];
 
-  for ( i=0 ; i<MUSIC_NUM ; i++ ) {
-    strcpy(name, "sounds/");
-    strcat(name, musicFileName[i]);
-    if ( NULL == (music[i] = Mix_LoadMUS(name)) ) {
-      fprintf(stderr, "Couldn't load: %s\n", name);
-      useAudio = 0;
-      return;
-    }
-  }
-  for ( i=0 ; i<CHUNK_NUM ; i++ ) {
-    strcpy(name, "sounds/");
-    strcat(name, chunkFileName[i]);
-    if ( NULL == (chunk[i] = Mix_LoadWAV(name)) ) {
-      fprintf(stderr, "Couldn't load: %s\n", name);
-      useAudio = 0;
-      return;
-    }
-  }
+  //for ( i=0 ; i<MUSIC_NUM ; i++ ) {
+  //  strcpy(name, "sounds/");
+  //  strcat(name, musicFileName[i]);
+  //  if ( NULL == (music[i] = Mix_LoadMUS(name)) ) {
+  //    fprintf(stderr, "Couldn't load: %s\n", name);
+  //    useAudio = 0;
+  //    return;
+  //  }
+  //}
+  //for ( i=0 ; i<CHUNK_NUM ; i++ ) {
+  //  strcpy(name, "sounds/");
+  //  strcat(name, chunkFileName[i]);
+  //  if ( NULL == (chunk[i] = Mix_LoadWAV(name)) ) {
+  //    fprintf(stderr, "Couldn't load: %s\n", name);
+  //    useAudio = 0;
+  //    return;
+  //  }
+  //}
 }
 
 void initSound() {
@@ -107,12 +107,12 @@ void initSound() {
   audio_channels = 1;
   audio_buffers = 4096;
   
-  if (Mix_OpenAudio(audio_rate, audio_format, audio_channels, audio_buffers) < 0) {
-    fprintf(stderr, "Couldn't open audio: %s\n", SDL_GetError());
-    return;
-  } else {
-    Mix_QuerySpec(&audio_rate, &audio_format, &audio_channels);
-  }
+  //if (Mix_OpenAudio(audio_rate, audio_format, audio_channels, audio_buffers) < 0) {
+  //  fprintf(stderr, "Couldn't open audio: %s\n", SDL_GetError());
+  //  return;
+  //} else {
+  //  Mix_QuerySpec(&audio_rate, &audio_format, &audio_channels);
+  //}
 
   useAudio = 1;
   loadSounds();
@@ -122,27 +122,27 @@ void initSound() {
 
 void playMusic(int idx) {
   if ( !useAudio ) return;
-  Mix_PlayMusic(music[idx], -1);
+ // Mix_PlayMusic(music[idx], -1);
 }
 
 void fadeMusic() {
   if ( !useAudio ) return;
-  Mix_FadeOutMusic(1280);
+  //Mix_FadeOutMusic(1280);
 }
 
 void stopMusic() {
   if ( !useAudio ) return;
-  if ( Mix_PlayingMusic() ) {
-    Mix_HaltMusic();
-  }
+  //if ( Mix_PlayingMusic() ) {
+  // // Mix_HaltMusic();
+  //}
 }
 
 void playChunk(int idx) {
   if ( !useAudio ) return;
-  Mix_PlayChannel(chunkChannel[idx], chunk[idx], 0);
+  //Mix_PlayChannel(chunkChannel[idx], chunk[idx], 0);
 }
 
 void haltChunk(int idx) {
   if ( !useAudio ) return;
-  Mix_HaltChannel(chunkChannel[idx]);
+  //Mix_HaltChannel(chunkChannel[idx]);
 }

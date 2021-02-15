@@ -7,7 +7,7 @@
 #include <string>
 #include <memory>
 
-DECLSPEC std::auto_ptr<Formula<double> > calc(const std::string& str);
+DECLSPEC rr::auto_ptr<Formula<double> > calc(const std::string& str);
 
 #endif // CALC_H_
 

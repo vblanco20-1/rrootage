@@ -12,7 +12,7 @@
 extern "C" {
 #include "SDL.h"
 #include <sys/types.h>
-#include <dirent.h>
+//#include <dirent.h>
 #include "genmcr.h"
 #include "brgmng_mtd.h"
 }
@@ -26,26 +26,43 @@ static const char *BARRAGE_DIR_NAME[BARRAGE_TYPE_NUM] = {
   "normal", "reversible", "morph", "simple", "morph_heavy", "psy",
 };
 
+#include <filesystem>
+
 static int readBulletMLFiles(const char *dirPath, Barrage brg[]) {
-  DIR *dp;
-  struct dirent *dir;
-  int i = 0;
-  char fileName[256];
-  if ( (dp = opendir(dirPath)) == NULL ) {
-    fprintf(stderr, "Can't open directory: %s\n", dirPath);
-    exit(1);
-  }
-  while ((dir = readdir(dp)) != NULL) {
-    if ( strcmp(strrchr(dir->d_name, '.'), ".xml") != 0 ) continue; // Read .xml files.
-    strcpy(fileName, dirPath);
-    strcat(fileName, "/");
-    strncat(fileName, dir->d_name, sizeof(fileName)-strlen(fileName)-1);
-    brg[i].bulletml = new BulletMLParserTinyXML(fileName);
-    brg[i].bulletml->build(); i++;
-    printf("%s\n", fileName);
-  }
-  closedir(dp);
-  return i;
+
+	namespace fs = std::filesystem;
+	int i = 0;
+
+	for (auto& p : fs::recursive_directory_iterator(dirPath))
+	{
+		if (p.path().extension() == ".xml")
+		{
+			brg[i].bulletml = new BulletMLParserTinyXML(p.path().string());
+			brg[i].bulletml->build(); i++;
+		}
+	}
+	return i;
+	//DIR *dp;
+	//struct dirent *dir;
+	//int i = 0;
+	//char fileName[256];
+	//if ( (dp = opendir(dirPath)) == NULL ) {
+	//  fprintf(stderr, "Can't open directory: %s\n", dirPath);
+	//  exit(1);
+	//}
+	//while ((dir = readdir(dp)) != NULL) {
+	//  if ( strcmp(strrchr(dir->d_name, '.'), ".xml") != 0 ) continue; // Read .xml files.
+	//  strcpy(fileName, dirPath);
+	//  strcat(fileName, "/");
+	//  strncat(fileName, dir->d_name, sizeof(fileName)-strlen(fileName)-1);
+	//  brg[i].bulletml = new BulletMLParserTinyXML(fileName);
+	//  brg[i].bulletml->build(); i++;
+	//  printf("%s\n", fileName);
+	//}
+	//closedir(dp);
+	//return i;
+
+	return 0;
 }
 
 void initBarragemanager() {

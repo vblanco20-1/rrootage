@@ -10,6 +10,7 @@
  * @version $Revision: 1.4 $
  */
 #include "SDL.h"
+#include "SDL_keyboard.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -251,7 +252,7 @@ int main(int argc, char *argv[]) {
 
   while ( !done ) {
     SDL_PollEvent(&event);
-    keys = SDL_GetKeyState(NULL);
+    keys = SDL_GetKeyboardState(NULL);
     buttons = getButtonState();
     if ( keys[SDLK_ESCAPE] == SDL_PRESSED || event.type == SDL_QUIT ) done = 1;
     if ( buttons & PAD_BUTTONP ) {
@@ -266,9 +267,9 @@ int main(int argc, char *argv[]) {
     } else {
       pPrsd = 0;
     }
-    if ( event.type == SDL_VIDEORESIZE ) {
-      resized(event.resize.w, event.resize.h);
-    }
+    //if ( event.type == SDL_VIDEORESIZE ) {
+    //  resized(event.resize.w, event.resize.h);
+    //}
 
     nowTick = SDL_GetTicks();
     frame = (int)(nowTick-prvTickCount) / interval;
@@ -276,6 +277,7 @@ int main(int argc, char *argv[]) {
       frame = 1;
       SDL_Delay(prvTickCount+interval-nowTick);
       if ( accframe ) {
+	prvTickCount = SDL_GetTicks();
 	prvTickCount = SDL_GetTicks();
       } else {
 	prvTickCount += interval;

@@ -106,7 +106,7 @@ void BulletMLParserXerces::parse() {
 	try {
 		XMLPlatformUtils::Initialize();
 
-		std::auto_ptr<SAXParser> parser(new SAXParser);
+		rr::auto_ptr<SAXParser> parser(new SAXParser);
 
 		parser->setValidationScheme(SAXParser::Val_Always);
 		parser->setDoNamespaces(false);

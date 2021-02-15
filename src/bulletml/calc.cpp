@@ -39,6 +39,10 @@ typedef Rank<NumType> CalcRank;
 typedef Param<NumType> CalcParam;
 typedef Operator CalcOperator;
 
+
+
+
+
 namespace {
 	CalcFormula* formula;
 	std::vector<CalcFormula*> formulas;
@@ -1070,11 +1074,12 @@ int yyerror(char* s) {
 	printf("yyerror: %s\n", s);
 	return 0;
 }
-
-std::auto_ptr<CalcFormula> calc(const std::string& str) {
+rr::auto_ptr<CalcFormula> calc(const std::string& str) {
 	std::string fml = str + '\n';
 	yyinStr = fml.c_str();
 	yyparse();
-	return std::auto_ptr<CalcFormula>(formula);
-}
 
+	rr::auto_ptr<CalcFormula> ptr;
+	ptr.val = formula;
+	return ptr;
+}

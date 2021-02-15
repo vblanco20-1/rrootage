@@ -140,10 +140,10 @@ private:
 
 private:
 private:
-    std::auto_ptr<LinearFunc<int, double> > changeDir_;
-    std::auto_ptr<LinearFunc<int, double> > changeSpeed_;
-    std::auto_ptr<LinearFunc<int, double> > accelx_;
-    std::auto_ptr<LinearFunc<int, double> > accely_;
+    rr::auto_ptr<LinearFunc<int, double> > changeDir_;
+    rr::auto_ptr<LinearFunc<int, double> > changeSpeed_;
+    rr::auto_ptr<LinearFunc<int, double> > accelx_;
+    rr::auto_ptr<LinearFunc<int, double> > accely_;
 
 protected:
     Validatable<double> spd_, dir_, prevSpd_, prevDir_;
