@@ -90,3 +90,29 @@ int drawNum(int n, int x ,int y, int s, int r, int g, int b);
 int drawNumRight(int n, int x ,int y, int s, int r, int g, int b);
 int drawNumCenter(int n, int x ,int y, int s, int r, int g, int b);
 int drawTimeCenter(int n, int x ,int y, int s, int r, int g, int b);
+
+typedef struct  {
+	GLfloat x;
+	GLfloat y;
+	GLfloat size;
+	int d;
+	int cnt;
+	int type;
+	int r;
+	int g;
+	int b;
+}FoeDraw;
+typedef struct  {
+	GLfloat x;
+	GLfloat y;
+	GLfloat size;
+	int d;
+	int cnt;
+	int type;
+	int c;
+}FoeDrawIka;
+
+
+void batchdrawShape(FoeDraw* draw, int count);
+
+void batchDrawShapeIka(FoeDrawIka* draw, int count);

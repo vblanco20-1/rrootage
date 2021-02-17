@@ -179,7 +179,7 @@ void initSDL(int argc, char* argv[]) {
 
 		
     }
-    videoFlags = SDL_WINDOW_OPENGL;// | SDL_WINDOW_FULLSCREEN; 
+    videoFlags = SDL_WINDOW_OPENGL ;// | SDL_WINDOW_FULLSCREEN; 
   } 
 
   initialize_platform();
@@ -938,6 +938,370 @@ void drawShapeIka(GLfloat x, GLfloat y, GLfloat size, int d, int cnt, int type, 
     break;
   }
   glPopMatrix();
+}
+
+
+void batchDrawShapeIka(FoeDrawIka* draw, int count) {
+    glDisable(GL_BLEND);
+    GLfloat sz, sz2, sz3;
+    {
+        glBegin(GL_TRIANGLES);
+        for (int i = 0; i < count; i++)
+        {
+            GLfloat x = draw[i].x;
+            GLfloat y = draw[i].y;
+            int c = draw[i].c;
+            glColor4ub(ikaClr[c][0][0], ikaClr[c][0][1], ikaClr[c][0][2], 255);
+
+            glVertex3f(-SHAPE_POINT_SIZE + x, -SHAPE_POINT_SIZE + y, 0);
+            glVertex3f(SHAPE_POINT_SIZE + x, -SHAPE_POINT_SIZE + y, 0);
+            glVertex3f(SHAPE_POINT_SIZE + x, SHAPE_POINT_SIZE + y, 0);
+
+            glVertex3f(-SHAPE_POINT_SIZE + x, -SHAPE_POINT_SIZE + y, 0);
+            glVertex3f(SHAPE_POINT_SIZE + x, SHAPE_POINT_SIZE + y, 0);
+            glVertex3f(-SHAPE_POINT_SIZE + x, SHAPE_POINT_SIZE + y, 0);
+
+        }
+        glEnd();
+    }
+
+	for (int i = 0; i < count; i++)
+	{
+		glPushMatrix();
+		glTranslatef(draw[i].x, draw[i].y, 0);
+
+		GLfloat x = draw[i].x;
+		GLfloat y = draw[i].y;
+		GLfloat size = draw[i].size;
+		int d = draw[i].d;
+		int cnt = draw[i].cnt;
+		int type = draw[i].type;
+
+		int c = draw[i].c;
+
+        glColor4ub(ikaClr[c][0][0], ikaClr[c][0][1], ikaClr[c][0][2], 255);
+        switch (type) {
+        case 0:
+            sz = size / 2; sz2 = sz / 3; sz3 = size * 2 / 3;
+            glRotatef((float)d * 360 / 1024, 0, 0, 1);
+            glBegin(GL_LINE_LOOP);
+            glVertex3f(-sz, -sz3, 0);
+            glVertex3f(sz, -sz3, 0);
+            glVertex3f(sz2, sz3, 0);
+            glVertex3f(-sz2, sz3, 0);
+            glEnd();
+            break;
+        case 1:
+            sz = size / 2;
+            glRotatef((float)((cnt * 53) & 1023) * 360 / 1024, 0, 0, 1);
+            glBegin(GL_LINE_LOOP);
+            glVertex3f(-sz / 2, -sz, 0);
+            glVertex3f(sz / 2, -sz, 0);
+            glVertex3f(sz, -sz / 2, 0);
+            glVertex3f(sz, sz / 2, 0);
+            glVertex3f(sz / 2, sz, 0);
+            glVertex3f(-sz / 2, sz, 0);
+            glVertex3f(-sz, sz / 2, 0);
+            glVertex3f(-sz, -sz / 2, 0);
+            glEnd();
+            break;
+        }
+        glPopMatrix();
+    }
+	glEnable(GL_BLEND);
+	for (int i = 0; i < count; i++)
+	{
+		glPushMatrix();
+		glTranslatef(draw[i].x, draw[i].y, 0);
+
+		GLfloat x = draw[i].x;
+		GLfloat y = draw[i].y;
+		GLfloat size = draw[i].size;
+		int d = draw[i].d;
+		int cnt = draw[i].cnt;
+		int type = draw[i].type;
+
+		int c = draw[i].c;
+
+		glColor4ub(ikaClr[c][0][0], ikaClr[c][0][1], ikaClr[c][0][2], 255);
+		switch (type) {
+		case 0:
+			sz = size / 2; sz2 = sz / 3; sz3 = size * 2 / 3;
+			glRotatef((float)d * 360 / 1024, 0, 0, 1);
+			glColor4ub(ikaClr[c][1][0], ikaClr[c][1][1], ikaClr[c][1][2], 250);
+			glBegin(GL_TRIANGLE_FAN);
+			glVertex3f(-sz, -sz3, 0);
+			glVertex3f(sz, -sz3, 0);
+			glColor4ub(ikaClr[c][2][0], ikaClr[c][2][1], ikaClr[c][2][2], 250);
+			glVertex3f(sz2, sz3, 0);
+			glVertex3f(-sz2, sz3, 0);
+			glEnd();
+			break;
+		case 1:
+			sz = size / 2;
+			glRotatef((float)((cnt * 53) & 1023) * 360 / 1024, 0, 0, 1);
+			glColor4ub(ikaClr[c][1][0], ikaClr[c][1][1], ikaClr[c][1][2], 250);
+			glBegin(GL_TRIANGLE_FAN);
+			glVertex3f(-sz / 2, -sz, 0);
+			glVertex3f(sz / 2, -sz, 0);
+			glVertex3f(sz, -sz / 2, 0);
+			glVertex3f(sz, sz / 2, 0);
+			glColor4ub(ikaClr[c][2][0], ikaClr[c][2][1], ikaClr[c][2][2], 250);
+			glVertex3f(sz / 2, sz, 0);
+			glVertex3f(-sz / 2, sz, 0);
+			glVertex3f(-sz, sz / 2, 0);
+			glVertex3f(-sz, -sz / 2, 0);
+			glEnd();
+			glEnd();
+			break;
+		}
+		glPopMatrix();
+	}
+}
+
+void batchdrawShape(FoeDraw* draw, int count) {
+	GLfloat sz, sz2;
+
+	glBegin(GL_TRIANGLES);
+	for (int i = 0; i < count; i++)
+	{
+		GLfloat x = draw[i].x;
+		GLfloat y = draw[i].y;
+
+		glColor4ub(draw[i].r, draw[i].g, draw[i].b, 255);
+
+		glVertex3f(-SHAPE_POINT_SIZE + x, -SHAPE_POINT_SIZE + y, 0);
+		glVertex3f(SHAPE_POINT_SIZE + x, -SHAPE_POINT_SIZE + y, 0);
+		glVertex3f(SHAPE_POINT_SIZE + x, SHAPE_POINT_SIZE + y, 0);
+
+		glVertex3f(-SHAPE_POINT_SIZE + x, -SHAPE_POINT_SIZE + y, 0);
+		glVertex3f(SHAPE_POINT_SIZE + x, SHAPE_POINT_SIZE + y, 0);
+		glVertex3f(-SHAPE_POINT_SIZE + x, SHAPE_POINT_SIZE + y, 0);
+
+	}
+	glEnd();
+	glDisable(GL_BLEND);
+	for (int i = 0; i < count; i++)
+	{
+		glPushMatrix();
+		glTranslatef(draw[i].x, draw[i].y, 0);
+		glColor4ub(draw[i].r, draw[i].g, draw[i].b, 255);
+
+		GLfloat x = draw[i].x;
+		GLfloat y = draw[i].y;
+		GLfloat size = draw[i].size;
+		int d = draw[i].d;
+		int cnt = draw[i].cnt;
+		int type = draw[i].type;
+
+		int r = draw[i].r;
+		int g = draw[i].g;
+		int b = draw[i].b;
+
+		switch (type) {
+		case 0:
+			sz = size / 2;
+			glRotatef((float)d * 360 / 1024, 0, 0, 1);
+
+			glBegin(GL_LINE_LOOP);
+			glVertex3f(-sz, -sz, 0);
+			glVertex3f(sz, -sz, 0);
+			glVertex3f(0, size, 0);
+			glEnd();
+			break;
+		case 1:
+			sz = size / 2;
+			glRotatef((float)((cnt * 23) & 1023) * 360 / 1024, 0, 0, 1);
+
+			glBegin(GL_LINE_LOOP);
+			glVertex3f(0, -size, 0);
+			glVertex3f(sz, 0, 0);
+			glVertex3f(0, size, 0);
+			glVertex3f(-sz, 0, 0);
+			glEnd();
+			break;
+		case 2:
+			sz = size / 4; sz2 = size / 3 * 2;
+			glRotatef((float)d * 360 / 1024, 0, 0, 1);
+
+			glBegin(GL_LINE_LOOP);
+			glVertex3f(-sz, -sz2, 0);
+			glVertex3f(sz, -sz2, 0);
+			glVertex3f(sz, sz2, 0);
+			glVertex3f(-sz, sz2, 0);
+			glEnd();
+			break;
+		case 3:
+			sz = size / 2;
+			glRotatef((float)((cnt * 37) & 1023) * 360 / 1024, 0, 0, 1);
+
+			glBegin(GL_LINE_LOOP);
+			glVertex3f(-sz, -sz, 0);
+			glVertex3f(sz, -sz, 0);
+			glVertex3f(sz, sz, 0);
+			glVertex3f(-sz, sz, 0);
+			glEnd();
+			break;
+		case 4:
+			sz = size / 2;
+			glRotatef((float)((cnt * 53) & 1023) * 360 / 1024, 0, 0, 1);
+
+			glBegin(GL_LINE_LOOP);
+			glVertex3f(-sz / 2, -sz, 0);
+			glVertex3f(sz / 2, -sz, 0);
+			glVertex3f(sz, -sz / 2, 0);
+			glVertex3f(sz, sz / 2, 0);
+			glVertex3f(sz / 2, sz, 0);
+			glVertex3f(-sz / 2, sz, 0);
+			glVertex3f(-sz, sz / 2, 0);
+			glVertex3f(-sz, -sz / 2, 0);
+			glEnd();
+			break;
+		case 5:
+			sz = size * 2 / 3; sz2 = size / 5;
+			glRotatef((float)d * 360 / 1024, 0, 0, 1);
+
+			glBegin(GL_LINE_STRIP);
+			glVertex3f(-sz, -sz + sz2, 0);
+			glVertex3f(0, sz + sz2, 0);
+			glVertex3f(sz, -sz + sz2, 0);
+			glEnd();
+			break;
+		case 6:
+			sz = size / 2;
+			glRotatef((float)((cnt * 13) & 1023) * 360 / 1024, 0, 0, 1);
+
+			glBegin(GL_LINE_LOOP);
+			glVertex3f(-sz, -sz, 0);
+			glVertex3f(0, -sz, 0);
+			glVertex3f(sz, 0, 0);
+			glVertex3f(sz, sz, 0);
+			glVertex3f(0, sz, 0);
+			glVertex3f(-sz, 0, 0);
+			glEnd();
+			break;
+		}
+
+		glPopMatrix();
+	}
+	glEnable(GL_BLEND);
+	for (int i = 0; i < count; i++)
+	{
+		glPushMatrix();
+		glTranslatef(draw[i].x, draw[i].y, 0);
+		glColor4ub(draw[i].r, draw[i].g, draw[i].b, 255);
+
+		GLfloat x = draw[i].x;
+		GLfloat y = draw[i].y;
+		GLfloat size = draw[i].size;
+		int d = draw[i].d;
+		int cnt = draw[i].cnt;
+		int type = draw[i].type;
+
+		int r = draw[i].r;
+		int g = draw[i].g;
+		int b = draw[i].b;
+
+		switch (type) {
+		case 0:
+			sz = size / 2;
+			glRotatef((float)d * 360 / 1024, 0, 0, 1);
+
+			glColor4ub(r, g, b, 150);
+			glBegin(GL_TRIANGLE_FAN);
+			glVertex3f(-sz, -sz, 0);
+			glVertex3f(sz, -sz, 0);
+			glColor4ub(SHAPE_BASE_COLOR_R, SHAPE_BASE_COLOR_G, SHAPE_BASE_COLOR_B, 150);
+			glVertex3f(0, size, 0);
+			glEnd();
+			break;
+		case 1:
+			sz = size / 2;
+			glRotatef((float)((cnt * 23) & 1023) * 360 / 1024, 0, 0, 1);
+
+			glColor4ub(r, g, b, 180);
+			glBegin(GL_TRIANGLE_FAN);
+			glVertex3f(0, -size, 0);
+			glVertex3f(sz, 0, 0);
+			glColor4ub(SHAPE_BASE_COLOR_R, SHAPE_BASE_COLOR_G, SHAPE_BASE_COLOR_B, 150);
+			glVertex3f(0, size, 0);
+			glVertex3f(-sz, 0, 0);
+			glEnd();
+			break;
+		case 2:
+			sz = size / 4; sz2 = size / 3 * 2;
+			glRotatef((float)d * 360 / 1024, 0, 0, 1);
+
+			glColor4ub(r, g, b, 120);
+			glBegin(GL_TRIANGLE_FAN);
+			glVertex3f(-sz, -sz2, 0);
+			glVertex3f(sz, -sz2, 0);
+			glColor4ub(SHAPE_BASE_COLOR_R, SHAPE_BASE_COLOR_G, SHAPE_BASE_COLOR_B, 150);
+			glVertex3f(sz, sz2, 0);
+			glVertex3f(-sz, sz2, 0);
+			glEnd();
+			break;
+		case 3:
+			sz = size / 2;
+			glRotatef((float)((cnt * 37) & 1023) * 360 / 1024, 0, 0, 1);
+
+			glColor4ub(r, g, b, 180);
+			glBegin(GL_TRIANGLE_FAN);
+			glVertex3f(-sz, -sz, 0);
+			glVertex3f(sz, -sz, 0);
+			glColor4ub(SHAPE_BASE_COLOR_R, SHAPE_BASE_COLOR_G, SHAPE_BASE_COLOR_B, 150);
+			glVertex3f(sz, sz, 0);
+			glVertex3f(-sz, sz, 0);
+			glEnd();
+			break;
+		case 4:
+			sz = size / 2;
+			glRotatef((float)((cnt * 53) & 1023) * 360 / 1024, 0, 0, 1);
+
+			glColor4ub(r, g, b, 220);
+			glBegin(GL_TRIANGLE_FAN);
+			glVertex3f(-sz / 2, -sz, 0);
+			glVertex3f(sz / 2, -sz, 0);
+			glVertex3f(sz, -sz / 2, 0);
+			glVertex3f(sz, sz / 2, 0);
+			glColor4ub(SHAPE_BASE_COLOR_R, SHAPE_BASE_COLOR_G, SHAPE_BASE_COLOR_B, 150);
+			glVertex3f(sz / 2, sz, 0);
+			glVertex3f(-sz / 2, sz, 0);
+			glVertex3f(-sz, sz / 2, 0);
+			glVertex3f(-sz, -sz / 2, 0);
+			glEnd();
+			break;
+		case 5:
+			sz = size * 2 / 3; sz2 = size / 5;
+			glRotatef((float)d * 360 / 1024, 0, 0, 1);
+
+			glColor4ub(r, g, b, 150);
+			glBegin(GL_TRIANGLE_FAN);
+			glVertex3f(-sz, -sz + sz2, 0);
+			glVertex3f(sz, -sz + sz2, 0);
+			glColor4ub(SHAPE_BASE_COLOR_R, SHAPE_BASE_COLOR_G, SHAPE_BASE_COLOR_B, 150);
+			glVertex3f(0, sz + sz2, 0);
+			glEnd();
+			break;
+		case 6:
+			sz = size / 2;
+			glRotatef((float)((cnt * 13) & 1023) * 360 / 1024, 0, 0, 1);
+
+			glColor4ub(r, g, b, 210);
+			glBegin(GL_TRIANGLE_FAN);
+			glVertex3f(-sz, -sz, 0);
+			glVertex3f(0, -sz, 0);
+			glVertex3f(sz, 0, 0);
+			glColor4ub(SHAPE_BASE_COLOR_R, SHAPE_BASE_COLOR_G, SHAPE_BASE_COLOR_B, 150);
+			glVertex3f(sz, sz, 0);
+			glVertex3f(0, sz, 0);
+			glVertex3f(-sz, 0, 0);
+			glEnd();
+			break;
+		}
+
+		glPopMatrix();
+	}
 }
 
 #define SHOT_WIDTH 0.1

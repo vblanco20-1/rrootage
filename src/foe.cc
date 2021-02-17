@@ -413,12 +413,57 @@ static int bulletColor[BULLET_COLOR_NUM][3] = {
   {180, 100, 50}, {100, 100, 140}, {150, 100, 120}, {100, 120, 150}, 
 };
 
+
+static FoeDraw draws[FOE_MAX];
+static size_t maxdraw;
+static FoeDrawIka ikadraws[FOE_MAX];
+static size_t maxdraw_ika;
+
+void addDraw(GLfloat x, GLfloat y, GLfloat size, int d, int cnt, int type,
+    int r, int g, int b)
+{
+    draws[maxdraw].x = x;
+    draws[maxdraw].y = y;
+    draws[maxdraw].size = size;
+
+	draws[maxdraw].d = d;
+	draws[maxdraw].cnt = cnt;
+	draws[maxdraw].type = type;
+
+	draws[maxdraw].r = r;
+    draws[maxdraw].g = g;
+	draws[maxdraw].b = b;
+
+    maxdraw++;
+}
+
+void addDrawIka(GLfloat x, GLfloat y, GLfloat size, int d, int cnt, int type, int c)
+{
+	ikadraws[maxdraw_ika].x = x;
+	ikadraws[maxdraw_ika].y = y;
+	ikadraws[maxdraw_ika].size = size;
+
+	ikadraws[maxdraw_ika].d = d;
+	ikadraws[maxdraw_ika].cnt = cnt;
+	ikadraws[maxdraw_ika].type = type;
+
+	ikadraws[maxdraw_ika].c = c;
+
+    maxdraw_ika++;
+}
+
+#include <algorithm>
+void batchdrawShape(FoeDraw* draw, size_t count);
 void drawBullets() {
   int i;
   Foe *fe;
   float x, y;
   int bc;
   int d, bt;
+
+  maxdraw = 0;
+  maxdraw_ika = 0;
+
   for ( i=0 ; i<FOE_MAX ; i++ ) {
     if ( foe[i].spc == NOT_EXIST || foe[i].spc == BATTERY ) continue;
     fe = &(foe[i]);
@@ -427,11 +472,26 @@ void drawBullets() {
     d = 1023 - getDeg(fe->pos.x - fe->ppos.x, fe->pos.y - fe->ppos.y);
     bt = fe->shapeType;
     if ( mode == IKA_MODE ) {
-      drawShapeIka(x, y, fe->bulletSize[bt], d, fe->cnt&1, fe->bulletShape[bt], fe->color);
+      /*drawShapeIka*/addDrawIka(x, y, fe->bulletSize[bt], d, fe->cnt&1, fe->bulletShape[bt], fe->color);
     } else {
       bc = fe->color%BULLET_COLOR_NUM;
-      drawShape(x, y, fe->bulletSize[bt], d, fe->cnt, fe->bulletShape[bt],
+      /*drawShape*/addDraw(x, y, fe->bulletSize[bt], d, fe->cnt, fe->bulletShape[bt],
 		bulletColor[bc][0], bulletColor[bc][1], bulletColor[bc][2]); 
     }
   }
+
+  std::sort(&draws[0], &draws[maxdraw], [](const FoeDraw& a, const FoeDraw& b) {
+
+      return a.type < b.type;
+  });
+
+  std::sort(&ikadraws[0], &ikadraws[maxdraw_ika], [](const FoeDrawIka& a, const FoeDrawIka& b) {
+
+	  return a.type < b.type;
+	  });
+
+  batchdrawShape(draws, maxdraw);
+ 
+  batchDrawShapeIka(ikadraws, maxdraw_ika);
+  
 }
