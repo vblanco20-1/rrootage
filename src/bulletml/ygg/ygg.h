@@ -1618,6 +1618,7 @@ class ygg_error :public ygg_error_code, public ygg_position {
 //
 //	■SAXハンドラ基本クラス
 //
+class ygg_parser;
 class sax_handler {
 	friend class ygg_parser;
 	ygg_parser *parser;

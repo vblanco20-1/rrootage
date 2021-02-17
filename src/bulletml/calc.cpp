@@ -10,7 +10,7 @@
 #define	PARAM	260
 #define	NEG	261
 
-#line 3 "calc.yy"
+////#linw 3 "calc.yy"
 
 typedef double NumType;
 
@@ -179,8 +179,8 @@ static const short yycheck[] = {     0,
     -1,    13,    14,    15,    16,     7,     8,     9,    10,     7,
      8,     9,    10,    15,    -1,    13
 };
-/* -*-C-*-  Note some compilers choke on comments on `#line' lines.  */
-#line 3 "/usr/lib/bison.simple"
+/* -*-C-*-  Note some compilers choke on comments on `//#linw' lines.  */
+////#linw 3 "/usr/lib/bison.simple"
 /* This file comes from bison-1.28.  */
 
 /* Skeleton output parser for bison,
@@ -368,9 +368,9 @@ __yy_memcpy (to, from, count)
      char *from;
      unsigned int count;
 {
-  register char *f = from;
-  register char *t = to;
-  register int i = count;
+    char *f = from;
+    char *t = to;
+    int i = count;
 
   while (i-- > 0)
     *t++ = *f++;
@@ -383,9 +383,9 @@ __yy_memcpy (to, from, count)
 static void
 __yy_memcpy (char *to, char *from, unsigned int count)
 {
-  register char *t = to;
-  register char *f = from;
-  register int i = count;
+    char *t = to;
+    char *f = from;
+    int i = count;
 
   while (i-- > 0)
     *t++ = *f++;
@@ -394,7 +394,7 @@ __yy_memcpy (char *to, char *from, unsigned int count)
 #endif
 #endif
 
-#line 217 "/usr/lib/bison.simple"
+////#linw 217 "/usr/lib/bison.simple"
 
 /* The user can define YYPARSE_PARAM as the name of an argument to be passed
    into yyparse.  The argument should have type void *.
@@ -428,10 +428,10 @@ int
 yyparse(YYPARSE_PARAM_ARG)
      YYPARSE_PARAM_DECL
 {
-  register int yystate;
-  register int yyn;
-  register short *yyssp;
-  register YYSTYPE *yyvsp;
+	int yystate;
+	int yyn;
+	short* yyssp;
+	YYSTYPE* yyvsp;
   int yyerrstatus;	/*  number of tokens to shift before error messages enabled */
   int yychar1 = 0;		/*  lookahead token as an internal (translated) token number */
 
@@ -723,81 +723,81 @@ yyreduce:
   switch (yyn) {
 
 case 4:
-#line 56 "calc.yy"
+//#linw 56 "calc.yy"
 { formula = f(yyvsp[-1]); return 0; ;
     break;}
 case 5:
-#line 59 "calc.yy"
+//#linw 59 "calc.yy"
 {
 	        yyval = formulas.size();
 	        formulas.push_back(new CalcFormula(new CalcNumber(yyvsp[0])));
         ;
     break;}
 case 6:
-#line 63 "calc.yy"
+//#linw 63 "calc.yy"
 {
 	        yyval = formulas.size();
             formulas.push_back(new CalcFormula(new CalcRandom()));
         ;
     break;}
 case 7:
-#line 67 "calc.yy"
+//#linw 67 "calc.yy"
 {
 			yyval = formulas.size();
 			formulas.push_back(new CalcFormula(new CalcRank()));
 		;
     break;}
 case 8:
-#line 71 "calc.yy"
+//#linw 71 "calc.yy"
 {
 			yyval = formulas.size();
 			formulas.push_back(new CalcFormula(new CalcParam(paramId)));
 		;
     break;}
 case 9:
-#line 75 "calc.yy"
+//#linw 75 "calc.yy"
 {
 		    yyval = formulas.size();
 			formulas.push_back(new CalcFormula(f(yyvsp[-2]), op_add, f(yyvsp[0])));
 		;
     break;}
 case 10:
-#line 79 "calc.yy"
+//#linw 79 "calc.yy"
 {
 		    yyval = formulas.size();
 			formulas.push_back(new CalcFormula(f(yyvsp[-2]), op_sub, f(yyvsp[0])));
 		;
     break;}
 case 11:
-#line 83 "calc.yy"
+//#linw 83 "calc.yy"
 {
 		    yyval = formulas.size();
 			formulas.push_back(new CalcFormula(f(yyvsp[-2]), op_mul, f(yyvsp[0])));
 		;
     break;}
 case 12:
-#line 87 "calc.yy"
+//#linw 87 "calc.yy"
 {
 		    yyval = formulas.size();
 			formulas.push_back(new CalcFormula(f(yyvsp[-2]), op_div, f(yyvsp[0])));
 		;
     break;}
 case 13:
-#line 91 "calc.yy"
+//#linw 91 "calc.yy"
 {
 		    yyval = yyvsp[0];
 			f(yyvsp[0])->setHeadSub();
 		;
     break;}
 case 14:
-#line 95 "calc.yy"
+//#linw 95 "calc.yy"
 {
 		    yyval = yyvsp[-1];
 		;
     break;}
 }
    /* the action file gets copied in in place of this dollarsign */
-#line 543 "/usr/lib/bison.simple"
+//#linw 543 "/usr/lib/bison.simple"
 
   yyvsp -= yylen;
   yyssp -= yylen;
@@ -1017,7 +1017,7 @@ yyerrhandle:
     }
   return 1;
 }
-#line 99 "calc.yy"
+//#linw 99 "calc.yy"
 
 
 /**

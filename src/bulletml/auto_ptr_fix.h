@@ -17,6 +17,27 @@ namespace rr {
 			return v;
 		}
 
+		auto_ptr<T>& operator=(auto_ptr<T>& other)
+		{
+			reset(other.get());
+			return *this;
+		}
+
+		void reset(T* ptr)
+		{
+			//if (val != nullptr) delete val;
+
+			val = ptr;
+		}
+
+		~auto_ptr() {
+			//if (val)
+			//{
+			//	delete val;
+			//}
+			
+		}
+
 		T* operator->() const {
 			return val;
 		}
@@ -29,18 +50,18 @@ namespace rr {
 
 template <class T_>
 inline void auto_ptr_copy (rr::auto_ptr<T_>& lhs, rr::auto_ptr<T_> rhs) {
-	lhs = rhs;
+	lhs.val = rhs.val;
 }
 template <class T_>
 inline void auto_ptr_copy (rr::auto_ptr<T_>& lhs, T_* rhs) {
 	//rr::auto_ptr<T_> p(rhs);
-	lhs.val = rhs;// = p;
+	lhs.reset(rhs);// = p;
 }
 template <class T_>
 inline T_* auto_ptr_release(rr::auto_ptr<T_>& p) {
-	T_* ret = p.release();
-	auto_ptr_copy(p, rr::auto_ptr<T_>());
-	return ret;
+	//T_* ret = p.release();
+	//auto_ptr_copy(p, rr::auto_ptr<T_>());
+	return p.release();
 }
 
 #endif // ! auto_ptr_fix_h_
