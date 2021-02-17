@@ -62,10 +62,18 @@ void loadPreference() {
   FILE *fp;
   int i, j;
   int version;
-  if ( NULL == (fp = fopen(PREF_FILE,"rb")) ) {
-    initHiScore();
-    return;
+#ifdef PLATFORM_NX
+
+  initHiScore();
+  return;
+
+#else
+  if (NULL == (fp = fopen(PREF_FILE, "rb"))) {
+  initHiScore();
+  return;
   }
+#endif
+  
   version = getw(fp);
   if ( version != VERSION_NUM ) {
     initHiScore();

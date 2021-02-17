@@ -1,4 +1,4 @@
-/*
+﻿/*
  * $Id: screen.c,v 1.6 2003/08/10 03:21:28 kenta Exp $
  *
  * Copyright 2003 Kenta Cho. All rights reserved.
@@ -13,7 +13,6 @@
 #include <stdlib.h>
 
 #include "SDL.h"
-#include "SDL_opengl.h"
 #include "SDL_keyboard.h"
 #include "SDL_keycode.h"
 
@@ -30,12 +29,30 @@
 
 #define FAR_PLANE 720
 
-#define SCREEN_WIDTH 640
-#define SCREEN_HEIGHT 480
+#define SCREEN_WIDTH 1280
+#define SCREEN_HEIGHT 720
 #define LOWRES_SCREEN_WIDTH 320
 #define LOWRES_SCREEN_HEIGHT 240
 
 static int screenWidth, screenHeight;
+
+GLint buildMips(GLenum target, GLint internalFormat, GLsizei width, GLsizei height, GLenum format, GLenum type, const void* data);
+// Replaces gluPerspective. Sets the frustum to perspective mode.
+// fovY     - Field of vision in degrees in the y direction
+// aspect   - Aspect ratio of the viewport
+// zNear    - The near clipping distance
+// zFar     - The far clipping distance
+
+void f_gluPerspective(GLdouble fovY, GLdouble aspect, GLdouble zNear, GLdouble zFar)
+{
+	const GLdouble pi = 3.1415926535897932384626433832795;
+	GLdouble fW, fH;
+
+	fH = tan((fovY / 2) / 180 * pi) * zNear;
+	fH = tan(fovY / 360 * pi) * zNear;
+	fW = fH * aspect;
+    glFrustum(-fW, fW, -fH, fH, zNear, zFar);
+}
 
 // Reset viewport when the screen is resized.
 static void screenResized() {
@@ -47,12 +64,12 @@ static void screenResized() {
   } else {
     viewportWidth = SCREEN_WIDTH * screenHeight / SCREEN_HEIGHT;
   }
-  int offsetX = (screenWidth - viewportWidth) / 2;
-  int offsetY = (screenHeight - viewportHeight) / 2;
+  int offsetX = 0;
+  int offsetY = 0;
   glViewport(offsetX, offsetY, viewportWidth, viewportHeight);
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  gluPerspective(45.0f, (GLfloat)viewportWidth/(GLfloat)viewportHeight, 0.1f, FAR_PLANE);
+  f_gluPerspective(45.0f, (GLfloat)viewportWidth/(GLfloat)viewportHeight, 0.1f, FAR_PLANE);
   glMatrixMode(GL_MODELVIEW);
 }
 
@@ -85,8 +102,12 @@ static void initGL() {
 void loadGLTexture(char *fileName, GLuint *texture) {
   SDL_Surface *surface;
 
-  char name[32];
+  char name[64];
+#ifdef PLATFORM_NX
+  strcpy(name, "Assets:/images/");
+#else
   strcpy(name, "images/");
+#endif
   strcat(name, fileName);
   surface = SDL_LoadBMP(name);
   if ( !surface ) {
@@ -99,16 +120,19 @@ void loadGLTexture(char *fileName, GLuint *texture) {
   glBindTexture(GL_TEXTURE_2D, *texture);
   glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR_MIPMAP_NEAREST);
-  gluBuild2DMipmaps(GL_TEXTURE_2D, 3, surface->w, surface->h, GL_RGB, GL_UNSIGNED_BYTE, surface->pixels);
+
+  buildMips(GL_TEXTURE_2D, 3, surface->w, surface->h, GL_RGB, GL_UNSIGNED_BYTE, surface->pixels);
 }
 
 void generateTexture(GLuint *texture) {
-  glGenTextures(1, texture);
+   glGenTextures(1, texture);
 }
 
 void deleteTexture(GLuint *texture) {
   glDeleteTextures(1, texture);
 }
+
+extern void initialize_platform(void);
 
 static GLuint starTexture;
 #define STAR_BMP "star.bmp"
@@ -123,7 +147,9 @@ int brightness = DEFAULT_BRIGHTNESS;
 Uint8 *keys;
 SDL_Joystick *stick = NULL;
 SDL_Window* Window = NULL;
-void initSDL() {
+
+#include "SDL_test_common.h"
+void initSDL(int argc, char* argv[]) {
   Uint32 videoFlags;
 
   if ( lowres ) {
@@ -135,35 +161,98 @@ void initSDL() {
   }
 
   /* Initialize SDL */
-  if ( SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0 ) {
+  if ( SDL_Init(/*SDL_INIT_VIDEO |*/ SDL_INIT_JOYSTICK) < 0 ) {
     fprintf(stderr, "Unable to initialize SDL: %s\n", SDL_GetError());
     exit(1);
   }
 
   /* Create an OpenGL screen */
+
+  windowMode = 0;
   if ( windowMode ) {
       videoFlags = SDL_WINDOW_OPENGL;
   } else {
     if ( !lowres ) {
       // Use native desktop resolution if -lowres is not specified.
-      screenWidth = 0;
-      screenHeight = 0;
+	  //screenWidth = 0;
+	  //screenHeight = 0;
+
+		
     }
-    videoFlags = SDL_WINDOW_OPENGL; 
+    videoFlags = SDL_WINDOW_OPENGL;// | SDL_WINDOW_FULLSCREEN; 
   } 
 
+  initialize_platform();
+  
+#ifdef PLATFORM_NX
+  SDLTest_CommonState* state = SDLTest_CommonCreateState(argv, SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER);
+  
+  /* Set Vulkan parameters */
+  state->window_flags |= SDL_WINDOW_OPENGL;
+  state->num_windows = 1;
+  state->window_minH = screenHeight;
+  state->window_minW = screenWidth;
+  state->skip_renderer = 1;
+  state->gl_red_size = 5;
+  state->gl_green_size = 5;
+  state->gl_blue_size = 5;
+  state->gl_depth_size = 16;
+  state->gl_double_buffer = 1;
+  state->gl_profile_mask = SDL_GL_CONTEXT_PROFILE_COMPATIBILITY;
+
+
+  if (!SDLTest_CommonDefaultArgs(state, argc, argv) || !SDLTest_CommonInit(state)) {
+	  SDLTest_CommonQuit(state);
+	  return ;
+  
+  }
+  Window = state->windows[0];
+
+  SDL_GLContext Context = SDL_GL_CreateContext(Window);
+  // glad: load all OpenGL function pointers
+  // ---------------------------------------
+  if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress))
+  {
+	  printf("Failed to initialize GLAD");
+	  return;
+  }
+
+ 
+  int dw, dh;
+  SDL_GetCurrentDisplayMode(0, &mode);
+  SDL_Log("Swap Interval : %d\n", SDL_GL_GetSwapInterval());
+  SDL_GetWindowSize(state->windows[0], &dw, &dh);
+  SDL_Log("Window Size   : %d,%d\n", dw, dh);
+  SDL_GL_GetDrawableSize(state->windows[0], &dw, &dh);
+  SDL_Log("Draw Size     : %d,%d\n", dw, dh);
+  SDL_Log("\n");
+  SDL_Log("Vendor        : %s\n", glGetString(GL_VENDOR));
+  SDL_Log("Renderer      : %s\n", glGetString(GL_RENDERER));
+  SDL_Log("Version       : %s\n", glGetString(GL_VERSION));
+  SDL_Log("Extensions    : %s\n", glGetString(GL_EXTENSIONS));
+  SDL_Log("\n");
+#else
+  SDL_Init(SDL_INIT_VIDEO);
   Window = SDL_CreateWindow("OpenGL Test", 0, 0, screenWidth, screenHeight, videoFlags);
 
-  if (Window == NULL) {
-	  fprintf(stderr, "Unable to create OpenGL screen: %s\n", SDL_GetError());
-	  SDL_Quit();
-	  exit(2);
-  }
-  SDL_GLContext Context = SDL_GL_CreateContext(Window);
-  //SDL_Surface* videoSurface = SDL_GetVideoSurface();
-  screenWidth = SCREEN_WIDTH;//videoSurface->w;
-  screenHeight = SCREEN_HEIGHT;//videoSurface->h;
+ if (Window == NULL) {
+     fprintf(stderr, "Unable to create OpenGL screen: %s\n", SDL_GetError());
+     SDL_Quit();
+     exit(2);
+ }
 
+ SDL_GLContext Context = SDL_GL_CreateContext(Window);
+ // glad: load all OpenGL function pointers
+  // ---------------------------------------
+ if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress))
+ {
+	 printf("Failed to initialize GLAD");
+	 return;
+ }
+#endif
+
+ 
+  
   stick = SDL_JoystickOpen(0);
 
   /* Set the title bar in environments that support it */
@@ -185,6 +274,98 @@ float zoom = 15;
 static int screenShakeCnt = 0;
 static int screenShakeType = 0;
 
+
+static void __gluMakeIdentityf(GLfloat m[16])
+{
+	m[0 + 4 * 0] = 1; m[0 + 4 * 1] = 0; m[0 + 4 * 2] = 0; m[0 + 4 * 3] = 0;
+	m[1 + 4 * 0] = 0; m[1 + 4 * 1] = 1; m[1 + 4 * 2] = 0; m[1 + 4 * 3] = 0;
+	m[2 + 4 * 0] = 0; m[2 + 4 * 1] = 0; m[2 + 4 * 2] = 1; m[2 + 4 * 3] = 0;
+	m[3 + 4 * 0] = 0; m[3 + 4 * 1] = 0; m[3 + 4 * 2] = 0; m[3 + 4 * 3] = 1;
+}
+
+
+static void cross(float v1[3], float v2[3], float result[3])
+{
+	result[0] = v1[1] * v2[2] - v1[2] * v2[1];
+	result[1] = v1[2] * v2[0] - v1[0] * v2[2];
+	result[2] = v1[0] * v2[1] - v1[1] * v2[0];
+}
+
+static void normalize(float v[3])
+{
+	float r;
+
+	r = sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+	if (r == 0.0) return;
+
+	v[0] /= r;
+	v[1] /= r;
+	v[2] /= r;
+}
+
+void f_gluLookAt(GLdouble eyex, GLdouble eyey, GLdouble eyez, GLdouble centerx,
+
+	GLdouble centery, GLdouble centerz, GLdouble upx, GLdouble upy,
+
+	GLdouble upz)
+
+{
+
+	int i;
+
+	float forward[3], side[3], up[3];
+
+	GLfloat m[4][4];
+
+	forward[0] = centerx - eyex;
+
+	forward[1] = centery - eyey;
+
+	forward[2] = centerz - eyez;
+
+
+
+	up[0] = upx;
+
+	up[1] = upy;
+
+	up[2] = upz;
+
+	normalize(forward);
+	/* Side = forward x up */
+
+	cross(forward, up, side);
+
+	normalize(side);
+
+	/* Recompute up as: up = side x forward */
+
+	cross(side, forward, up);
+
+    __gluMakeIdentityf(&m[0][0]);
+
+	m[0][0] = side[0];
+
+	m[1][0] = side[1];
+
+	m[2][0] = side[2];
+
+
+    m[0][1] = up[0];
+    m[1][1] = up[1];
+	m[2][1] = up[2];
+
+
+
+	m[0][2] = -forward[0];
+	m[1][2] = -forward[1];
+	m[2][2] = -forward[2];
+
+	glMultMatrixf(&m[0][0]);
+
+	glTranslated(-eyex, -eyey, -eyez);
+}
+
 static void setEyepos() {
   float x, y;
   glPushMatrix();
@@ -199,9 +380,9 @@ static void setEyepos() {
       y = (float)randNS2(256)*screenShakeCnt/21000.0f;
       break;
     }
-    gluLookAt(0, 0, zoom, x, y, 0, 0.0f, 1.0f, 0.0f);
+    f_gluLookAt(0, 0, zoom, x, y, 0, 0.0f, 1.0f, 0.0f);
   } else {
-    gluLookAt(0, 0, zoom, 0, 0, 0, 0.0f, 1.0f, 0.0f);
+    f_gluLookAt(0, 0, zoom, 0, 0, 0, 0.0f, 1.0f, 0.0f);
   }
 }
 
@@ -225,10 +406,8 @@ void drawGLSceneEnd() {
 }
 
 void swapGLScene() {
-	//glClearColor(1.f, 0.f, 1.f, 0.f);
-	//glClear(GL_COLOR_BUFFER_BIT);
-    SDL_GL_SwapWindow(Window);
-  //SDL_GL_SwapBuffers();
+  SDL_GL_SwapWindow(Window);
+
 }
 
 void drawBox(GLfloat x, GLfloat y, GLfloat width, GLfloat height, 
@@ -943,15 +1122,29 @@ int drawTimeCenter(int n, int x ,int y, int s, int r, int g, int b) {
   return y;
 }
 
-#define JOYSTICK_AXIS 16384
+//#define JOYSTICK_AXIS 16384
+#define JOYSTICK_AXIS 5000
+SDL_GameController* mainController = NULL;
+SDL_GameController* get_main_controller()
+{
+    if (mainController == NULL)
+    {
+        mainController = SDL_GameControllerOpen(0);
+    }
+	return mainController;
+}
+
 
 int getPadState() {
   int x = 0, y = 0;
   int hat = SDL_HAT_CENTERED;
   int pad = 0;
   if ( stick != NULL ) {
-    x = SDL_JoystickGetAxis(stick, 0);
-    y = SDL_JoystickGetAxis(stick, 1);
+
+      x = SDL_GameControllerGetAxis(get_main_controller(), SDL_CONTROLLER_AXIS_LEFTX);
+      y = SDL_GameControllerGetAxis(get_main_controller(), SDL_CONTROLLER_AXIS_LEFTY);
+	//x = SDL_JoystickGetAxis(stick, 0);
+	//y = SDL_JoystickGetAxis(stick, 1);
     if (SDL_JoystickNumHats(stick) > 0) {
       hat = SDL_JoystickGetHat(stick, 0);
     }
@@ -978,16 +1171,22 @@ int getButtonState() {
   int btn1 = 0, btn2 = 0, btn3 = 0, btn4 = 0;
   int btn5 = 0, btn6 = 0, btn7 = 0, btn8 = 0, btn9 = 0;
   if ( stick != NULL ) {
-    btn1 = SDL_JoystickGetButton(stick, 0);
-    btn2 = SDL_JoystickGetButton(stick, 1);
-    btn3 = SDL_JoystickGetButton(stick, 2);
-    btn4 = SDL_JoystickGetButton(stick, 3);
-    btn5 = SDL_JoystickGetButton(stick, 4);
-    btn6 = SDL_JoystickGetButton(stick, 5);
-    btn7 = SDL_JoystickGetButton(stick, 6);
-    btn8 = SDL_JoystickGetButton(stick, 7);
-    btn9 = SDL_JoystickGetButton(stick, 9);
+   // btn1 = SDL_JoystickGetButton(stick, 0);
+   // btn2 = SDL_JoystickGetButton(stick, 1);
+   // btn3 = SDL_JoystickGetButton(stick, 2);
+   // btn4 = SDL_JoystickGetButton(stick, 3);
+   // btn5 = SDL_JoystickGetButton(stick, 4);
+   // btn6 = SDL_JoystickGetButton(stick, 5);
+   // btn7 = SDL_JoystickGetButton(stick, 6);
+   // btn8 = SDL_JoystickGetButton(stick, 7);
+   // btn9 = SDL_JoystickGetButton(stick, 9);
   }
+
+  btn1 = SDL_GameControllerGetButton(get_main_controller(), SDL_CONTROLLER_BUTTON_A);
+  btn2 = SDL_GameControllerGetButton(get_main_controller(), SDL_CONTROLLER_BUTTON_B);
+  btn3 = SDL_GameControllerGetButton(get_main_controller(), SDL_CONTROLLER_BUTTON_X);
+  btn4 = SDL_GameControllerGetButton(get_main_controller(), SDL_CONTROLLER_BUTTON_Y);
+  btn5 = SDL_GameControllerGetButton(get_main_controller(), SDL_CONTROLLER_BUTTON_RIGHTSHOULDER);
   if (keys[SDL_GetScancodeFromKey(SDLK_z)] == SDL_PRESSED || btn1 || btn4) {
     if ( !buttonReversed ) {
       btn |= PAD_BUTTON1;
@@ -1007,3 +1206,15 @@ int getButtonState() {
   }
   return btn;
 }
+
+GLint buildMips(GLenum target, GLint internalFormat,
+	GLsizei width, GLsizei height,
+	GLenum format, GLenum type,
+	const void* data)
+{
+    glTexImage2D(target, 0,internalFormat, width, height,0, format, type, data);
+    glGenerateMipmap(target);
+
+    return 0;
+}
+

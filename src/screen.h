@@ -9,11 +9,14 @@
  *
  * @version $Revision: 1.4 $
  */
-#include "SDL.h"
 
+#include "SDL.h"
+#ifndef PLATFORM_NX
 #include <windows.h>
-#include <GL/gl.h>
-#include <GL/glu.h>
+#endif
+
+#include "SDL_opengles2_khrplatform.h"
+#include "glad.h"
 
 #define PAD_UP 1
 #define PAD_DOWN 2

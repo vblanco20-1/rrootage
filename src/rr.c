@@ -246,7 +246,7 @@ int main(int argc, char *argv[]) {
   parseArgs(argc, argv);
 
   initDegutil();
-  initSDL();
+  initSDL(argc,argv);
   initFirst();
   initTitle();
 
