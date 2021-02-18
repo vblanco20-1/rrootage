@@ -37,7 +37,7 @@
 #define AUDIO_FORMAT AUDIO_S16LSB
 
 /* Frequency of the file */
-#define AUDIO_FREQUENCY 48000
+#define AUDIO_FREQUENCY 44100
 
 /* 1 mono, 2 stereo, 4 quad, 6 (5.1) */
 #define AUDIO_CHANNELS 1
@@ -145,7 +145,7 @@ void initAudio(void)
 
     if(gDevice == NULL)
     {
-        fprintf(stderr, "[%s: %d]Fatal Error: Memory c-allocation error\n", __FILE__, __LINE__);
+        printf("[%s: %d]Fatal Error: Memory c-allocation error\n", __FILE__, __LINE__);
         return;
     }
 
@@ -153,7 +153,7 @@ void initAudio(void)
 
     if(!(SDL_WasInit(SDL_INIT_AUDIO) & SDL_INIT_AUDIO))
     {
-        fprintf(stderr, "[%s: %d]Error: SDL_INIT_AUDIO not initialized\n", __FILE__, __LINE__);
+        printf("[%s: %d]Error: SDL_INIT_AUDIO not initialized\n", __FILE__, __LINE__);
         return;
     }
 
@@ -170,20 +170,41 @@ void initAudio(void)
 
     if(global == NULL)
     {
-        fprintf(stderr, "[%s: %d]Error: Memory allocation error\n", __FILE__, __LINE__);
+        printf("[%s: %d]Error: Memory allocation error\n", __FILE__, __LINE__);
         return;
     }
 
     global->buffer = NULL;
     global->next = NULL;
-
+    SDL_AudioSpec obtained;
     /* want.userdata = newAudio; */
-    if((gDevice->device = SDL_OpenAudioDevice(NULL, 0, &(gDevice->want), NULL, SDL_AUDIO_ALLOW_CHANGES)) == 0)
+    if((gDevice->device = SDL_OpenAudioDevice(NULL, 0, &(gDevice->want), &obtained, 0)) == 0)
     {
-        fprintf(stderr, "[%s: %d]Warning: failed to open audio device: %s\n", __FILE__, __LINE__, SDL_GetError());
+        printf("[%s: %d]Warning: failed to open audio device: %s\n", __FILE__, __LINE__, SDL_GetError());
     }
     else
     {
+        int n = SDL_GetNumAudioDevices(0);
+        for (int i = 0; i < n; i++)
+        {
+			char* name = SDL_GetAudioDeviceName(i, 0);
+			if (!name)
+			{
+				printf("bad audio name");
+			}
+			else {
+				printf(name);
+			}
+        }
+
+        char* name = SDL_GetAudioDeviceName(gDevice->device, 0);
+        if (!name)
+        {
+            printf("bad audio name");
+        }
+        else {
+            printf(name);
+        }
        // printf(SDL_GetAudioDeviceName(gDevice->device, 0));
         /* Set audio device enabled global flag */
         gDevice->audioEnabled = 1;
