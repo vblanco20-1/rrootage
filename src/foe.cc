@@ -453,7 +453,6 @@ void addDrawIka(GLfloat x, GLfloat y, GLfloat size, int d, int cnt, int type, in
 }
 
 #include <algorithm>
-void batchdrawShape(FoeDraw* draw, size_t count);
 void drawBullets() {
   int i;
   Foe *fe;

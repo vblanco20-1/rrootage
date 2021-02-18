@@ -70,7 +70,7 @@ protected:
     Name name_;
 	Type type_;
 	int refID_;
-    rr::auto_ptr<Number> val_;
+    std::shared_ptr<Number> val_;
 };
 
 

@@ -428,11 +428,11 @@ int
 yyparse(YYPARSE_PARAM_ARG)
      YYPARSE_PARAM_DECL
 {
-	int yystate;
-	int yyn;
+	int yystate=0;
+	int yyn = 0;
 	short* yyssp;
 	YYSTYPE* yyvsp;
-  int yyerrstatus;	/*  number of tokens to shift before error messages enabled */
+  int yyerrstatus = 0;	/*  number of tokens to shift before error messages enabled */
   int yychar1 = 0;		/*  lookahead token as an internal (translated) token number */
 
   short	yyssa[YYINITDEPTH];	/*  the state stack			*/
@@ -463,11 +463,11 @@ yyparse(YYPARSE_PARAM_ARG)
 #endif
 #endif
 
-  YYSTYPE yyval;		/*  the variable used to return		*/
+  YYSTYPE yyval = NULL;		/*  the variable used to return		*/
 				/*  semantic values from the action	*/
 				/*  routines				*/
 
-  int yylen;
+  int yylen = 0;
 
 #if YYDEBUG != 0
   if (yydebug)
@@ -1074,12 +1074,11 @@ int yyerror(char* s) {
 	printf("yyerror: %s\n", s);
 	return 0;
 }
-rr::auto_ptr<CalcFormula> calc(const std::string& str) {
+std::shared_ptr<CalcFormula> calc(const std::string& str) {
 	std::string fml = str + '\n';
 	yyinStr = fml.c_str();
 	yyparse();
-
-	rr::auto_ptr<CalcFormula> ptr;
-	ptr.val = formula;
+    std::shared_ptr<CalcFormula> ptr = std::shared_ptr<CalcFormula>(formula);
+	
 	return ptr;
 }
