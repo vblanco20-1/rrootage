@@ -31,6 +31,9 @@
 #include "soundmanager.h"
 #include "attractmanager.h"
 
+#include "TracyC.h"
+
+
 static int noSound = 0;
 
 // Initialize and load preference.
@@ -232,13 +235,18 @@ static void parseArgs(int argc, char *argv[]) {
 int interval = INTERVAL_BASE;
 int tick = 0;
 static int pPrsd = 1;
+void wrapped_draw(void (*fn)(void));
 
+void wrapped_draw2(void (*fn)(void));
+
+void wrapped_draw3(void (*fn)(void));
 int main(int argc, char *argv[]) {
   int done = 0;
   long prvTickCount = 0;
   int i;
   SDL_Event event;
   long nowTick;
+  long oldTick;
   int frame;
   int buttons;
 
@@ -249,12 +257,15 @@ int main(int argc, char *argv[]) {
   initSDL(argc,argv);
   initFirst();
   initTitle();
-
+  oldTick = SDL_GetTicks();
   while ( !done ) {
+      TracyCZone(mainloop,1);
+      
+
     SDL_PollEvent(&event);
     keys = SDL_GetKeyboardState(NULL);
     buttons = getButtonState();
-    if ( keys[SDLK_ESCAPE] == SDL_PRESSED || event.type == SDL_QUIT ) done = 1;
+    if ( keys[SDL_GetScancodeFromKey(SDLK_ESCAPE)] == SDL_PRESSED || event.type == SDL_QUIT ) done = 1;
     if ( buttons & PAD_BUTTONP ) {
       if ( !pPrsd ) {
 	if ( status == IN_GAME ) {
@@ -266,37 +277,47 @@ int main(int argc, char *argv[]) {
       pPrsd = 1;
     } else {
       pPrsd = 0;
-    }
+    }frame = 1;
     //if ( event.type == SDL_VIDEORESIZE ) {
     //  resized(event.resize.w, event.resize.h);
-    //}
+    //} 
 
-    nowTick = SDL_GetTicks();
-    frame = (int)(nowTick-prvTickCount) / interval;
-    if ( frame <= 0 ) {
-      frame = 1;
-      SDL_Delay(prvTickCount+interval-nowTick);
-      if ( accframe ) {
-	prvTickCount = SDL_GetTicks();
-	prvTickCount = SDL_GetTicks();
-      } else {
-	prvTickCount += interval;
-      }
-    } else if ( frame > 5 ) {
-      frame = 5;
-      prvTickCount = nowTick;
-    } else {
-      prvTickCount += frame*interval;
-    }
-    for ( i=0 ; i<frame ; i++ ) {
-      move();
-      tick++;
-    }
+    
+    TracyCZone(Move, 1);
+    move();
+    TracyCZoneEnd(Move);
+    tick++;
 
     drawGLSceneStart();
-    draw();
-    drawGLSceneEnd();
-    swapGLScene();
+    TracyCZone(Draw, 1);
+    wrapped_draw(draw);
+   // ();
+    TracyCZoneEnd(Draw);
+    wrapped_draw2( drawGLSceneEnd);
+    wrapped_draw3(swapGLScene);
+    TracyCZoneEnd(mainloop)
+
+	accframe = 0;
+
+#ifndef PLATFORM_NX
+    //delay for vsync. Not very accurate
+    while (1)
+    {
+        nowTick = SDL_GetTicks();
+        int delta = nowTick - oldTick;
+        if (delta < interval)
+        {
+            SDL_Delay(1);
+        }
+        else {
+            break;
+        }
+    }
+#else
+    //we can rely on vsync on switch so no delays
+    nowTick = SDL_GetTicks();
+#endif
+    oldTick = nowTick;
   }
   quitLast();
   return 0;

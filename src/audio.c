@@ -280,6 +280,8 @@ void PlayChannel(Audio* music, int channel, int volume)
 	gDevice->channels[channel+1] = music;
 	music->loop = 0;
 	music->volume = volume;
+    music->buffer = music->bufferTrue;
+    music->length= music->lengthTrue;
 }
 
 
@@ -290,9 +292,13 @@ void StopChannel(int channel)
 
 void PlayPersistentMusic(Audio* music, int volume)
 {
+
     gDevice->channels[0] = music;
-    music->loop = 1;
-    music->volume = volume;
+    if (music)
+    {
+        music->loop = 1;
+        music->volume = volume;
+    }
 }
 
 Audio * createAudio(const char * filename, uint8_t loop, int volume)

@@ -193,6 +193,7 @@ void initSDL(int argc, char* argv[]) {
   state->window_minH = screenHeight;
   state->window_minW = screenWidth;
   state->skip_renderer = 1;
+  //state->gl_multisamplesamples = 1;
   state->gl_red_size = 5;
   state->gl_green_size = 5;
   state->gl_blue_size = 5;
@@ -233,6 +234,7 @@ void initSDL(int argc, char* argv[]) {
   SDL_Log("\n");
 #else
   SDL_Init(SDL_INIT_VIDEO);
+  SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 8);
   Window = SDL_CreateWindow("OpenGL Test", 0, 0, screenWidth, screenHeight, videoFlags);
 
  if (Window == NULL) {
@@ -1503,16 +1505,29 @@ int getPadState() {
   int x = 0, y = 0;
   int hat = SDL_HAT_CENTERED;
   int pad = 0;
-  if ( stick != NULL ) {
+ 
 
-      x = SDL_GameControllerGetAxis(get_main_controller(), SDL_CONTROLLER_AXIS_LEFTX);
-      y = SDL_GameControllerGetAxis(get_main_controller(), SDL_CONTROLLER_AXIS_LEFTY);
-	//x = SDL_JoystickGetAxis(stick, 0);
-	//y = SDL_JoystickGetAxis(stick, 1);
-    if (SDL_JoystickNumHats(stick) > 0) {
-      hat = SDL_JoystickGetHat(stick, 0);
-    }
+  SDL_GameController* controller = get_main_controller();
+
+  if (controller)
+  {
+	  x = SDL_GameControllerGetAxis(get_main_controller(), SDL_CONTROLLER_AXIS_LEFTX);
+	  y = SDL_GameControllerGetAxis(get_main_controller(), SDL_CONTROLLER_AXIS_LEFTY);
+
+	  if (SDL_GameControllerGetButton(controller,SDL_CONTROLLER_BUTTON_DPAD_RIGHT)) {
+		  pad |= PAD_RIGHT;
+	  }
+      if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_DPAD_LEFT)) {
+		  pad |= PAD_LEFT;
+	  }
+      if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_DPAD_DOWN)) {
+		  pad |= PAD_DOWN;
+	  }
+      if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_DPAD_UP)) {
+		  pad |= PAD_UP;
+	  }
   }
+      
   if ( keys[SDL_GetScancodeFromKey(SDLK_RIGHT)] == SDL_PRESSED  || x > JOYSTICK_AXIS || (hat & SDL_HAT_RIGHT)) {
     pad |= PAD_RIGHT;
   }
@@ -1534,23 +1549,18 @@ int getButtonState() {
   int btn = 0;
   int btn1 = 0, btn2 = 0, btn3 = 0, btn4 = 0;
   int btn5 = 0, btn6 = 0, btn7 = 0, btn8 = 0, btn9 = 0;
-  if ( stick != NULL ) {
-   // btn1 = SDL_JoystickGetButton(stick, 0);
-   // btn2 = SDL_JoystickGetButton(stick, 1);
-   // btn3 = SDL_JoystickGetButton(stick, 2);
-   // btn4 = SDL_JoystickGetButton(stick, 3);
-   // btn5 = SDL_JoystickGetButton(stick, 4);
-   // btn6 = SDL_JoystickGetButton(stick, 5);
-   // btn7 = SDL_JoystickGetButton(stick, 6);
-   // btn8 = SDL_JoystickGetButton(stick, 7);
-   // btn9 = SDL_JoystickGetButton(stick, 9);
+ 
+  SDL_GameController* controller = get_main_controller();
+  if (controller)
+  {
+	  btn1 = SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_A);
+	  btn2 = SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_B);
+	  btn3 = SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_X);
+	  btn4 = SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_Y);
+	  btn5 = SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_RIGHTSHOULDER);
   }
+  
 
-  btn1 = SDL_GameControllerGetButton(get_main_controller(), SDL_CONTROLLER_BUTTON_A);
-  btn2 = SDL_GameControllerGetButton(get_main_controller(), SDL_CONTROLLER_BUTTON_B);
-  btn3 = SDL_GameControllerGetButton(get_main_controller(), SDL_CONTROLLER_BUTTON_X);
-  btn4 = SDL_GameControllerGetButton(get_main_controller(), SDL_CONTROLLER_BUTTON_Y);
-  btn5 = SDL_GameControllerGetButton(get_main_controller(), SDL_CONTROLLER_BUTTON_RIGHTSHOULDER);
   if (keys[SDL_GetScancodeFromKey(SDLK_z)] == SDL_PRESSED || btn1 || btn4) {
     if ( !buttonReversed ) {
       btn |= PAD_BUTTON1;

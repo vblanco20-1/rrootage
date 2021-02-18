@@ -201,7 +201,7 @@ static void clearFoeShape(Foe *fe, int shape) {
 #define DEFAULT_SPEED_DOWN_BULLETS_NUM 180
 
 int processSpeedDownBulletsNum = DEFAULT_SPEED_DOWN_BULLETS_NUM;
-int nowait = 0;
+int nowait = 1;
 
 void moveFoes() {
   int i;

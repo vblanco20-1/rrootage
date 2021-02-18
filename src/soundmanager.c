@@ -167,6 +167,7 @@ void fadeMusic() {
 
 void stopMusic() {
   if ( !useAudio ) return;
+  PlayPersistentMusic(NULL, 0);
   //sdplayMusicFromMemory(NULL,0);
   //if ( Mix_PlayingMusic() ) {
   // // Mix_HaltMusic();
