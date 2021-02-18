@@ -48,10 +48,20 @@ typedef struct sound
     uint8_t free;
     uint8_t volume;
 
+    uint32_t soundId;
     SDL_AudioSpec audio;
-
+    SDL_AudioFormat format;
     struct sound * next;
 } Audio;
+
+
+void PlayChannel(Audio* music, int channel, int volume);
+void StopChannel(int channel);
+
+void PlayPersistentMusic(Audio* music, int volume);
+
+
+
 
 /*
  * Create a Audio object

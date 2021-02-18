@@ -24,12 +24,12 @@ static int useAudio = 0;
 
 #define MUSIC_NUM 3
 
-//static char *musicFileName[MUSIC_NUM] = {
-//  "stg_a.ogg", "stg_b.ogg", "stg_c.ogg",
-//};
-static char* musicFileName[MUSIC_NUM] = {
-  "stg_a.wav", "stg_b.wav", "stg_c.wav",
+static char *musicFileName[MUSIC_NUM] = {
+  "stg_a2.ogg", "stg_b2.ogg", "stg_c2.ogg",
 };
+//static char* musicFileName[MUSIC_NUM] = {
+//  "stg_a.wav", "stg_b.wav", "stg_c.wav",
+//};
 //static Mix_Music *music[MUSIC_NUM];
 static Audio* music[MUSIC_NUM];
 
@@ -86,7 +86,7 @@ static void loadSounds() {
 #endif
 	  strcat(name, musicFileName[i]);
 
-	  music[i] = createAudio(name,1, SDL_MIX_MAXVOLUME);
+	  music[i] = createAudio(name,1, SDL_MIX_MAXVOLUME/3);
 	  if (music[i] == NULL)
 	  {
 		  fprintf(stderr, "Couldn't load: %s\n", name);
@@ -154,7 +154,8 @@ void initSound() {
 
 void playMusic(int idx) {
   if ( !useAudio ) return;
-  sdplayMusicFromMemory(music[idx], SDL_MIX_MAXVOLUME);
+  PlayPersistentMusic(music[idx], SDL_MIX_MAXVOLUME);
+  //sdplayMusicFromMemory(music[idx], SDL_MIX_MAXVOLUME/3);
  // Mix_PlayMusic(music[idx], -1);
 }
 
@@ -174,11 +175,14 @@ void stopMusic() {
 
 void playChunk(int idx) {
   if ( !useAudio ) return;
-  playSoundFromMemory(chunk[idx], SDL_MIX_MAXVOLUME);
+
+  PlayChannel(chunk[idx], idx, SDL_MIX_MAXVOLUME);
+ // playSoundFromMemory(chunk[idx], SDL_MIX_MAXVOLUME);
   //Mix_PlayChannel(chunkChannel[idx], chunk[idx], 0);
 }
 
 void haltChunk(int idx) {
   if ( !useAudio ) return;
+  StopChannel(idx);
   //Mix_HaltChannel(chunkChannel[idx]);
 }

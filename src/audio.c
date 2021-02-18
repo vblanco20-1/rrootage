@@ -22,6 +22,8 @@
 
 #include <SDL.h>
 
+#include "stb_vorbis.h"
+
 #include "audio.h"
 
 /*
@@ -73,6 +75,8 @@ typedef struct privateAudioDevice
     SDL_AudioDeviceID device;
     SDL_AudioSpec want;
     uint8_t audioEnabled;
+
+    Audio* channels[32];
 } PrivateAudioDevice;
 
 /* File scope variables to persist data */
@@ -143,6 +147,12 @@ void initAudio(void)
     gDevice = (PrivateAudioDevice *) calloc(1, sizeof(PrivateAudioDevice));
     gSoundCount = 0;
 
+    //gDevice->music = NULL;
+    for (int i = 0; i < 32; i++)
+    {
+        gDevice->channels[i] = NULL;
+    }
+
     if(gDevice == NULL)
     {
         printf("[%s: %d]Fatal Error: Memory c-allocation error\n", __FILE__, __LINE__);
@@ -187,14 +197,14 @@ void initAudio(void)
         int n = SDL_GetNumAudioDevices(0);
         for (int i = 0; i < n; i++)
         {
-			char* name = SDL_GetAudioDeviceName(i, 0);
-			if (!name)
-			{
-				printf("bad audio name");
-			}
-			else {
-				printf(name);
-			}
+            char* name = SDL_GetAudioDeviceName(i, 0);
+            if (!name)
+            {
+                printf("bad audio name");
+            }
+            else {
+                printf(name);
+            }
         }
 
         char* name = SDL_GetAudioDeviceName(gDevice->device, 0);
@@ -262,10 +272,33 @@ void freeAudio(Audio * audio)
         free(temp);
     }
 }
+static lastaudio = 0;
+
+
+void PlayChannel(Audio* music, int channel, int volume)
+{
+	gDevice->channels[channel+1] = music;
+	music->loop = 0;
+	music->volume = volume;
+}
+
+
+void StopChannel(int channel)
+{
+	gDevice->channels[channel + 1] = NULL;
+}
+
+void PlayPersistentMusic(Audio* music, int volume)
+{
+    gDevice->channels[0] = music;
+    music->loop = 1;
+    music->volume = volume;
+}
 
 Audio * createAudio(const char * filename, uint8_t loop, int volume)
 {
     Audio * newAudio = (Audio *) calloc(1, sizeof(Audio));
+    newAudio->soundId = lastaudio++;
 
     if(newAudio == NULL)
     {
@@ -285,15 +318,48 @@ Audio * createAudio(const char * filename, uint8_t loop, int volume)
     newAudio->free = 1;
     newAudio->volume = volume;
 
-    if(SDL_LoadWAV(filename, &(newAudio->audio), &(newAudio->bufferTrue), &(newAudio->lengthTrue)) == NULL)
+    int channels;
+    int samplerate;
+    short* buffer;
+    int eror = 0;
+    stb_vorbis* audio = stb_vorbis_open_filename(filename, &eror, NULL);
+    
+    //ogg file
+    if (eror == 0)
     {
-        fprintf(stderr, "[%s: %d]Warning: failed to open wave file: %s error: %s\n", __FILE__, __LINE__, filename, SDL_GetError());
-        free(newAudio);
-        return NULL;
-    }
+        stb_vorbis_info inf = stb_vorbis_get_info(audio);
 
-    newAudio->buffer = newAudio->bufferTrue;
-    newAudio->length = newAudio->lengthTrue;
+        audio->total_samples = stb_vorbis_stream_length_in_samples(audio);
+        
+        newAudio->audio.size = sizeof(short) * audio->total_samples;
+        newAudio->bufferTrue = malloc(newAudio->audio.size);
+        newAudio->buffer = newAudio->bufferTrue;
+        newAudio->lengthTrue = newAudio->audio.size;
+        newAudio->length = newAudio->lengthTrue;
+
+        stb_vorbis_get_samples_short_interleaved(audio, 1, newAudio->bufferTrue, audio->total_samples);
+        
+        newAudio->audio.channels = audio->channels;
+        newAudio->audio.freq = audio->sample_rate;
+        newAudio->audio.format = AUDIO_S16;
+        newAudio->audio.silence = 0;
+        newAudio->audio.samples = AUDIO_SAMPLES;
+       
+        newAudio->format = AUDIO_S16;
+    }
+    else {
+        if (SDL_LoadWAV(filename, &(newAudio->audio), &(newAudio->bufferTrue), &(newAudio->lengthTrue)) == NULL)
+        {
+            fprintf(stderr, "[%s: %d]Warning: failed to open wave file: %s error: %s\n", __FILE__, __LINE__, filename, SDL_GetError());
+            free(newAudio);
+            return NULL;
+        }
+
+        newAudio->buffer = newAudio->bufferTrue;
+        newAudio->length = newAudio->lengthTrue;
+        
+    }
+    
     (newAudio->audio).callback = NULL;
     (newAudio->audio).userdata = NULL;
 
@@ -322,6 +388,8 @@ static inline void playAudio(const char * filename, Audio * audio, uint8_t loop,
             gSoundCount++;
         }
     }
+
+    Audio* list = (Audio*)(gDevice->want).userdata;
 
     /* Load from filename or from Memory */
     if(filename != NULL)
@@ -400,6 +468,40 @@ static void addMusic(Audio * root, Audio * newAudio)
 
 static inline void audioCallback(void * userdata, uint8_t * stream, int len)
 {
+	
+	int tempLength;
+	uint8_t music = 0;
+
+	/* Silence the main buffer */
+	SDL_memset(stream, 0, len);
+
+	for(int i = 0; i < 32;i++)
+	{
+        Audio* audio = gDevice->channels[i];
+        if (!audio) continue;
+
+		if (audio->length > 0)
+		{
+
+			tempLength = ((uint32_t)len > audio->length) ? audio->length : (uint32_t)len;
+
+		    SDL_MixAudioFormat(stream, audio->buffer, audio->audio.format, tempLength, audio->volume);
+
+			audio->buffer += tempLength;
+			audio->length -= tempLength;
+		}
+		else if (audio->loop == 1)
+		{
+			audio->buffer = audio->bufferTrue;
+			audio->length = audio->lengthTrue;
+		}
+		else
+		{
+            gDevice->channels[i] = NULL;
+			//freeAudio(audio);
+		}
+	}
+#if 0
     Audio * audio = (Audio *) userdata;
     Audio * previous = audio;
     int tempLength;
@@ -445,7 +547,13 @@ static inline void audioCallback(void * userdata, uint8_t * stream, int len)
                 tempLength = ((uint32_t) len > audio->length) ? audio->length : (uint32_t) len;
             }
 
-            SDL_MixAudioFormat(stream, audio->buffer, AUDIO_FORMAT, tempLength, audio->volume);
+            //if (audio->audio.format == AUDIO_F32)
+            //{
+            //    tempLength *= 2;
+            //}
+           // memcpy(stream, audio->buffer, tempLength);
+            //SDL_MixAudio(stream, audio->buffer, tempLength, audio->volume);
+            SDL_MixAudioFormat(stream, audio->buffer, audio->audio.format, tempLength, audio->volume);
 
             audio->buffer += tempLength;
             audio->length -= tempLength;
@@ -473,6 +581,7 @@ static inline void audioCallback(void * userdata, uint8_t * stream, int len)
             audio = previous->next;
         }
     }
+#endif
 }
 
 static void addAudio(Audio * root, Audio * newAudio)
